@@ -1,0 +1,111 @@
+@page
+@model NguyenVanBien_SE18C.NET_A02.Pages.Staff.MyNewsModel
+@{
+    ViewData["Title"] = "My News History - Staff";
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2>My News History</h2>
+            <p class="text-muted">View all news articles you have created</p>
+        </div>
+        <div>
+            <a href="/Staff/NewsManagement" class="btn btn-outline-primary">Back to News Management</a>
+        </div>
+    </div>
+
+    @if (Model.MyNewsArticles.Any())
+    {
+        <div class="row g-4">
+            @foreach (var article in Model.MyNewsArticles)
+            {
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <span class="badge bg-primary">@article.Category?.CategoryName</span>
+                                @if (article.NewsStatus == true)
+                                {
+                                    <span class="badge bg-success">Active</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">Inactive</span>
+                                }
+                            </div>
+                            <h5 class="card-title">@article.NewsTitle</h5>
+                            <h6 class="card-subtitle mb-2 text-muted">@article.Headline</h6>
+                            <p class="card-text">
+                                @if (article.NewsContent?.Length > 150)
+                                {
+                                    @article.NewsContent.Substring(0, 150)<text>...</text>
+                                }
+                                else
+                                {
+                                    @article.NewsContent
+                                }
+                            </p>
+                            @if (article.NewsTags.Any())
+                            {
+                                <div class="mb-2">
+                                    @foreach (var newsTag in article.NewsTags)
+                                    {
+                                        <span class="badge bg-info me-1">@newsTag.Tag?.TagName</span>
+                                    }
+                                </div>
+                            }
+                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                <small class="text-muted">
+                                    <strong>Created:</strong> @article.CreatedDate?.ToString("MMM dd, yyyy")
+                                </small>
+                                @if (article.ModifiedDate.HasValue && article.ModifiedDate != article.CreatedDate)
+                                {
+                                    <small class="text-muted">
+                                        <strong>Modified:</strong> @article.ModifiedDate?.ToString("MMM dd, yyyy")
+                                    </small>
+                                }
+                            </div>
+                            @if (!string.IsNullOrEmpty(article.NewsSource))
+                            {
+                                <small class="text-muted d-block mt-2">
+                                    <strong>Source:</strong> @article.NewsSource
+                                </small>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info text-center" role="alert">
+            <h4 class="alert-heading">No News Articles Found</h4>
+            <p>You haven't created any news articles yet.</p>
+            <a href="/Staff/NewsManagement" class="btn btn-primary mt-2">Create Your First Article</a>
+        </div>
+    }
+</div>
+
+<div class="mt-4">
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">Statistics</h5>
+            <div class="row text-center">
+                <div class="col-md-4">
+                    <h3 class="text-primary">@Model.MyNewsArticles.Count</h3>
+                    <p class="text-muted">Total Articles</p>
+                </div>
+                <div class="col-md-4">
+                    <h3 class="text-success">@Model.MyNewsArticles.Count(a => a.NewsStatus == true)</h3>
+                    <p class="text-muted">Active Articles</p>
+                </div>
+                <div class="col-md-4">
+                    <h3 class="text-secondary">@Model.MyNewsArticles.Count(a => a.NewsStatus == false)</h3>
+                    <p class="text-muted">Inactive Articles</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

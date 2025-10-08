@@ -1,0 +1,79 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "FU News - Home";
+}
+
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h1 class="display-5 fw-bold">FU News Management</h1>
+            <p class="lead text-muted">Stay updated with the latest news and articles</p>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-8 mx-auto">
+            <form method="get" class="d-flex">
+                <input type="text" name="searchTerm" value="@Model.SearchTerm" 
+                       class="form-control me-2" placeholder="Search news articles..." />
+                <button type="submit" class="btn btn-outline-primary">Search</button>
+                @if (!string.IsNullOrEmpty(Model.SearchTerm))
+                {
+                    <a href="/" class="btn btn-outline-secondary ms-2">Clear</a>
+                }
+            </form>
+        </div>
+    </div>
+
+    @if (Model.NewsArticles.Any())
+    {
+        <div class="row g-4">
+            @foreach (var article in Model.NewsArticles)
+            {
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <span class="badge bg-primary">@article.Category?.CategoryName</span>
+                                <small class="text-muted">@article.CreatedDate?.ToString("MMM dd, yyyy")</small>
+                            </div>
+                            <h5 class="card-title">@article.NewsTitle</h5>
+                            <h6 class="card-subtitle mb-2 text-muted">@article.Headline</h6>
+                            <p class="card-text">
+                                @if (article.NewsContent?.Length > 150)
+                                {
+                                    @article.NewsContent.Substring(0, 150)<text>...</text>
+                                }
+                                else
+                                {
+                                    @article.NewsContent
+                                }
+                            </p>
+                            @if (article.NewsTags.Any())
+                            {
+                                <div class="mb-2">
+                                    @foreach (var newsTag in article.NewsTags)
+                                    {
+                                        <span class="badge bg-secondary me-1">@newsTag.Tag?.TagName</span>
+                                    }
+                                </div>
+                            }
+                            @if (!string.IsNullOrEmpty(article.NewsSource))
+                            {
+                                <small class="text-muted">Source: @article.NewsSource</small>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info text-center" role="alert">
+            <h4 class="alert-heading">No News Articles Found</h4>
+            <p>@(string.IsNullOrEmpty(Model.SearchTerm) ? "There are no active news articles available at the moment." : $"No results found for '{Model.SearchTerm}'.")</p>
+        </div>
+    }
+</div>

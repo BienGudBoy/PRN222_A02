@@ -1,0 +1,71 @@
+@page
+@model NguyenVanBien_SE18C.NET_A02.Pages.Staff.ProfileModel
+@{
+    ViewData["Title"] = "My Profile - Staff";
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h3>My Profile</h3>
+                        <a href="/Staff/NewsManagement" class="btn btn-outline-primary">Back to News Management</a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    @if (Model.SuccessMessage != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            @Model.SuccessMessage
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    @if (Model.ErrorMessage != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            @Model.ErrorMessage
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    <form method="post">
+                        <div class="mb-3">
+                            <label class="form-label">Account ID</label>
+                            <input type="text" class="form-control" value="@Model.Account?.AccountID" disabled />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Name</label>
+                            <input type="text" name="accountName" class="form-control" 
+                                   value="@Model.Account?.AccountName" required />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" name="accountEmail" class="form-control" 
+                                   value="@Model.Account?.AccountEmail" required />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">New Password (leave blank to keep current)</label>
+                            <input type="password" name="newPassword" class="form-control" 
+                                   placeholder="Enter new password" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Role</label>
+                            <input type="text" class="form-control" value="Staff" disabled />
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">Update Profile</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

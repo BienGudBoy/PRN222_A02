@@ -1,0 +1,368 @@
+@page
+@model NguyenVanBien_SE18C.NET_A02.Pages.Staff.NewsManagementModel
+@{
+    ViewData["Title"] = "News Management - Staff";
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2>News Article Management</h2>
+            <p class="text-muted">Manage news articles with real-time updates</p>
+        </div>
+        <div>
+            <a href="/Staff/CategoryManagement" class="btn btn-outline-primary me-2">Manage Categories</a>
+            <a href="/Staff/Profile" class="btn btn-outline-info me-2">My Profile</a>
+            <a href="/Staff/MyNews" class="btn btn-outline-secondary">My News History</a>
+        </div>
+    </div>
+
+    @if (Model.SuccessMessage != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @Model.SuccessMessage
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (Model.ErrorMessage != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @Model.ErrorMessage
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-8">
+                    <form method="get" class="d-flex">
+                        <input type="text" name="searchTerm" value="@Model.SearchTerm" 
+                               class="form-control me-2" placeholder="Search news articles..." />
+                        <button type="submit" class="btn btn-primary">Search</button>
+                        @if (!string.IsNullOrEmpty(Model.SearchTerm))
+                        {
+                            <a href="/Staff/NewsManagement" class="btn btn-outline-secondary ms-2">Clear</a>
+                        }
+                    </form>
+                </div>
+                <div class="col-md-4 text-end">
+                    <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#createNewsModal">
+                        <i class="bi bi-plus-lg"></i> Create News Article
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover" id="newsTable">
+                    <thead>
+                        <tr>
+                            <th>Article ID</th>
+                            <th>Title</th>
+                            <th>Headline</th>
+                            <th>Category</th>
+                            <th>Status</th>
+                            <th>Created Date</th>
+                            <th>Tags</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var article in Model.NewsArticles)
+                        {
+                            <tr id="news-@article.NewsArticleID">
+                                <td>@article.NewsArticleID</td>
+                                <td>@article.NewsTitle</td>
+                                <td>@article.Headline</td>
+                                <td>@article.Category?.CategoryName</td>
+                                <td>
+                                    @if (article.NewsStatus == true)
+                                    {
+                                        <span class="badge bg-success">Active</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">Inactive</span>
+                                    }
+                                </td>
+                                <td>@article.CreatedDate?.ToString("MMM dd, yyyy")</td>
+                                <td>
+                                    @foreach (var nt in article.NewsTags)
+                                    {
+                                        <span class="badge bg-info me-1">@nt.Tag?.TagName</span>
+                                    }
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-primary" onclick='editNews(@Html.Raw(System.Text.Json.JsonSerializer.Serialize(new { 
+                                        id = article.NewsArticleID,
+                                        title = article.NewsTitle,
+                                        headline = article.Headline,
+                                        content = article.NewsContent,
+                                        source = article.NewsSource,
+                                        categoryId = article.CategoryID,
+                                        status = article.NewsStatus,
+                                        tags = article.NewsTags.Select(nt => nt.TagID).ToArray()
+                                    })))'>
+                                        Edit
+                                    </button>
+                                    <button class="btn btn-sm btn-danger" onclick="confirmDelete('@article.NewsArticleID', '@article.NewsTitle')">
+                                        Delete
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create News Modal -->
+<div class="modal fade" id="createNewsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Create News Article</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" asp-page-handler="Create">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Article ID</label>
+                        <input type="text" name="newsArticleId" class="form-control" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Title</label>
+                        <input type="text" name="newsTitle" class="form-control" maxlength="400" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Headline</label>
+                        <input type="text" name="headline" class="form-control" maxlength="150" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Content</label>
+                        <textarea name="newsContent" class="form-control" rows="5" maxlength="4000"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Source</label>
+                        <input type="text" name="newsSource" class="form-control" maxlength="400" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Category</label>
+                        <select name="categoryId" class="form-select" required>
+                            <option value="">Select Category</option>
+                            @foreach (var category in Model.Categories)
+                            {
+                                <option value="@category.CategoryID">@category.CategoryName</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Tags</label>
+                        <div class="row">
+                            @foreach (var tag in Model.Tags)
+                            {
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="selectedTags" value="@tag.TagID" id="createTag@(tag.TagID)">
+                                        <label class="form-check-label" for="createTag@(tag.TagID)">
+                                            @tag.TagName
+                                        </label>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="newsStatus" value="true" id="createStatus" checked>
+                            <label class="form-check-label" for="createStatus">
+                                Active
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit News Modal -->
+<div class="modal fade" id="editNewsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit News Article</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" asp-page-handler="Update">
+                <div class="modal-body">
+                    <input type="hidden" name="newsArticleId" id="editNewsId" />
+                    <div class="mb-3">
+                        <label class="form-label">Title</label>
+                        <input type="text" name="newsTitle" id="editNewsTitle" class="form-control" maxlength="400" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Headline</label>
+                        <input type="text" name="headline" id="editHeadline" class="form-control" maxlength="150" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Content</label>
+                        <textarea name="newsContent" id="editContent" class="form-control" rows="5" maxlength="4000"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Source</label>
+                        <input type="text" name="newsSource" id="editSource" class="form-control" maxlength="400" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Category</label>
+                        <select name="categoryId" id="editCategoryId" class="form-select" required>
+                            <option value="">Select Category</option>
+                            @foreach (var category in Model.Categories)
+                            {
+                                <option value="@category.CategoryID">@category.CategoryName</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Tags</label>
+                        <div class="row" id="editTagsContainer">
+                            @foreach (var tag in Model.Tags)
+                            {
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input edit-tag-checkbox" type="checkbox" name="selectedTags" value="@tag.TagID" id="editTag@(tag.TagID)">
+                                        <label class="form-check-label" for="editTag@(tag.TagID)">
+                                            @tag.TagName
+                                        </label>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="newsStatus" value="true" id="editStatus">
+                            <label class="form-check-label" for="editStatus">
+                                Active
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" asp-page-handler="Delete">
+                <div class="modal-body">
+                    <input type="hidden" name="newsArticleId" id="deleteNewsId" />
+                    <p>Are you sure you want to delete news: <strong id="deleteNewsTitle"></strong>?</p>
+                    <p class="text-danger">This action cannot be undone.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.0/signalr.min.js"></script>
+    <script>
+        // SignalR connection
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/newsHub")
+            .withAutomaticReconnect()
+            .build();
+
+        connection.on("NewsCreated", (newsId, newsTitle) => {
+            showToast(`New article created: ${newsTitle}`, 'success');
+            setTimeout(() => location.reload(), 2000);
+        });
+
+        connection.on("NewsModified", (newsId, newsTitle) => {
+            showToast(`Article updated: ${newsTitle}`, 'info');
+            setTimeout(() => location.reload(), 2000);
+        });
+
+        connection.on("NewsDeleted", (newsId) => {
+            showToast(`Article deleted`, 'warning');
+            const row = document.getElementById(`news-${newsId}`);
+            if (row) {
+                row.style.backgroundColor = '#ffcccc';
+                setTimeout(() => row.remove(), 1000);
+            }
+        });
+
+        connection.start().catch(err => console.error(err));
+
+        function showToast(message, type) {
+            const toastHtml = `
+                <div class="toast align-items-center text-white bg-${type} border-0 position-fixed top-0 end-0 m-3" role="alert" style="z-index: 9999;">
+                    <div class="d-flex">
+                        <div class="toast-body">${message}</div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                    </div>
+                </div>`;
+            document.body.insertAdjacentHTML('beforeend', toastHtml);
+            const toastEl = document.querySelector('.toast:last-child');
+            const toast = new bootstrap.Toast(toastEl, { delay: 3000 });
+            toast.show();
+            setTimeout(() => toastEl.remove(), 3500);
+        }
+
+        function editNews(data) {
+            document.getElementById('editNewsId').value = data.id;
+            document.getElementById('editNewsTitle').value = data.title;
+            document.getElementById('editHeadline').value = data.headline;
+            document.getElementById('editContent').value = data.content || '';
+            document.getElementById('editSource').value = data.source || '';
+            document.getElementById('editCategoryId').value = data.categoryId;
+            document.getElementById('editStatus').checked = data.status;
+
+            // Clear all tag checkboxes
+            document.querySelectorAll('.edit-tag-checkbox').forEach(cb => cb.checked = false);
+
+            // Check selected tags
+            if (data.tags && data.tags.length > 0) {
+                data.tags.forEach(tagId => {
+                    const checkbox = document.getElementById(`editTag${tagId}`);
+                    if (checkbox) checkbox.checked = true;
+                });
+            }
+
+            new bootstrap.Modal(document.getElementById('editNewsModal')).show();
+        }
+
+        function confirmDelete(id, title) {
+            document.getElementById('deleteNewsId').value = id;
+            document.getElementById('deleteNewsTitle').textContent = title;
+            new bootstrap.Modal(document.getElementById('deleteModal')).show();
+        }
+    </script>
+}
