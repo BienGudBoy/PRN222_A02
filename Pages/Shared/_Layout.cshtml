@@ -35,6 +35,19 @@
                                 </a>
                             </li>
                         }
+                        @if (Context.Session.GetInt32("AccountRole") == 3)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-white" asp-page="/Admin/AccountManagement">
+                                    <i class="bi bi-people"></i> Account Management
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-white" asp-page="/Admin/Reports">
+                                    <i class="bi bi-bar-chart"></i> Reports
+                                </a>
+                            </li>
+                        }
                     </ul>
                     <ul class="navbar-nav">
                         @if (Context.Session.GetString("AccountEmail") != null)
